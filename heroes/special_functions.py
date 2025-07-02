@@ -1,4 +1,4 @@
-from matches.main_functions import calculate_kda
+from heroes.main_functions import calculate_kda
 
 def get_contribution_label(kills, deaths, assists):
     kda = calculate_kda(kills, deaths, assists)

@@ -1,8 +1,8 @@
 import requests
 from dotenv import load_dotenv
-from matches.main_functions import is_win, format_duration, calculate_kda
-from matches.special_functions import get_contribution_label
-from matches.chart import plot_kda_stats
+from heroes.main_functions import is_win, format_duration, calculate_kda
+from heroes.special_functions import get_contribution_label
+from heroes.chart import plot_kda_stats
 
 load_dotenv()
 

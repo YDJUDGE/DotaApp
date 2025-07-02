@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import streamlit as st
-from matches.main_functions import calculate_kda
-from matches.special_functions import get_contribution_label
+from heroes.main_functions import calculate_kda
+from heroes.special_functions import get_contribution_label
 
 
 def plot_kda_stats(matches, hero_id):
