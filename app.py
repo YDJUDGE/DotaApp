@@ -1,16 +1,9 @@
 import streamlit as st
-import requests
 from matches.main_functions import is_win, format_duration, calculate_kda
 from matches.special_functions import get_contribution_label
 from matches.chart import plot_kda_stats
 from datetime import datetime
-
-
-def fetch_matches(hero_id: int, limit=10):
-    url = f"https://api.opendota.com/api/heroes/{hero_id}/matches"
-    data = requests.get(url)
-    return data.json()[:limit] if data.status_code == 200 else []
-
+from matches.main_function import fetch_matches
 
 def app():
     st.set_page_config(page_title="Dota 2 Анализ", layout="wide")
