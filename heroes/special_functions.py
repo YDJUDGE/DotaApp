@@ -5,7 +5,7 @@ def get_contribution_label(kills, deaths, assists):
 
     if deaths in (0, 1) and kills > 14 and assists > 5:
         return "MVP 🏆"
-    elif kda >=25:
+    elif kda >= 24:
         return "MVP 🏆"
     elif kda > 7:
         return "Игра зависела от него"

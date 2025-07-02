@@ -1,5 +1,4 @@
 
-
 def is_win(match):
     """Победил игрок или нет"""
     slot = match['player_slot']

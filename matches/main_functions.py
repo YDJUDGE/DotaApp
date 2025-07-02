@@ -1,0 +1,41 @@
+import json
+import os
+
+# Кэш на уровне модуля
+_hero_mapping = None
+_item_mapping = None
+
+def load_item_mapping():
+    global _item_mapping
+    if _item_mapping is None:
+        file_path = os.path.join("data", "items.json")
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                _item_mapping = json.load(f)
+        except Exception as e:
+            print(f"❌ Не удалось загрузить items.json: {e}")
+            _item_mapping = {}
+    return _item_mapping
+
+def get_item_name(item_id):
+    mapping = load_item_mapping()
+    return mapping.get(str(item_id), f"Unknown({item_id})")
+
+def format_items(item_ids):
+    return [get_item_name(item_id) for item_id in item_ids]
+
+def load_hero_mapping():
+    global _hero_mapping
+    if _hero_mapping is None:
+        file_path = os.path.join("data", "heroes.json")
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                _hero_mapping = json.load(f)
+        except Exception as e:
+            print(f"❌ Не удалось загрузить heroes.json: {e}")
+            _hero_mapping = {}
+    return _hero_mapping
+
+def get_hero_by_id(hero_id: int):
+    mapping = load_hero_mapping()
+    return mapping.get(str(hero_id), f"Unknown{hero_id}")
