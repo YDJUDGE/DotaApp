@@ -3,7 +3,7 @@ from heroes.main_functions import is_win, format_duration, calculate_kda
 from heroes.special_functions import get_contribution_label
 from heroes.chart import plot_kda_stats
 from datetime import datetime
-from heroes.main_function import fetch_matches
+from heroes.main_function import fetch_hero_by_match
 
 def hero_analysis_page():
     st.title("📊 Анализ героев в Dota 2")
@@ -14,7 +14,7 @@ def hero_analysis_page():
         run = st.button("🔍 Проанализировать")
 
     if run:
-        matches = fetch_matches(hero_id, match_count)
+        matches = fetch_hero_by_match(hero_id, match_count)
 
         if not matches:
             st.error("❌ Не удалось получить данные")
