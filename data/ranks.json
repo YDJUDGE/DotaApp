@@ -1,39 +1,150 @@
 {
-    "11": "Herald I",
-    "12": "Herald II",
-    "13": "Herald III",
-    "14": "Herald IV",
-    "15": "Herald V",
-    "21": "Guardian I",
-    "22": "Guardian II",
-    "23": "Guardian III",
-    "24": "Guardian IV",
-    "25": "Guardian V",
-    "31": "Crusader I",
-    "32": "Crusader II",
-    "33": "Crusader III",
-    "34": "Crusader IV",
-    "35": "Crusader V",
-    "41": "Archon I",
-    "42": "Archon II",
-    "43": "Archon III",
-    "44": "Archon IV",
-    "45": "Archon V",
-    "51": "Legend I",
-    "52": "Legend II",
-    "53": "Legend III",
-    "54": "Legend IV",
-    "55": "Legend V",
-    "61": "Ancient I",
-    "62": "Ancient II",
-    "63": "Ancient III",
-    "64": "Ancient IV",
-    "65": "Ancient V",
-    "71": "Divine I",
-    "72": "Divine II",
-    "73": "Divine III",
-    "74": "Divine IV",
-    "75": "Divine V",
-    "80": "Immortal",
-    "0": "Неизвестен"
+    "11": {
+        "name": "Herald I",
+        "mmr": 800
+    },
+    "12": {
+        "name": "Herald II",
+        "mmr": 1000
+    },
+    "13": {
+        "name": "Herald III",
+        "mmr": 1100
+    },
+    "14": {
+        "name": "Herald IV",
+        "mmr": 1200
+    },
+    "15": {
+        "name": "Herald V",
+        "mmr": 1300
+    },
+    "21": {
+        "name": "Guardian I",
+        "mmr": 1400
+    },
+    "22": {
+        "name": "Guardian II",
+        "mmr": 1500
+    },
+    "23": {
+        "name": "Guardian III",
+        "mmr": 1600
+    },
+    "24": {
+        "name": "Guardian IV",
+        "mmr": 1700
+    },
+    "25": {
+        "name": "Guardian V",
+        "mmr": 1800
+    },
+    "31": {
+        "name": "Crusader I",
+        "mmr": 1900
+    },
+    "32": {
+        "name": "Crusader II",
+        "mmr": 2000
+    },
+    "33": {
+        "name": "Crusader III",
+        "mmr": 2100
+    },
+    "34": {
+        "name": "Crusader IV",
+        "mmr": 2200
+    },
+    "35": {
+        "name": "Crusader V",
+        "mmr": 2300
+    },
+    "41": {
+        "name": "Archon I",
+        "mmr": 2400
+    },
+    "42": {
+        "name": "Archon II",
+        "mmr": 2500
+    },
+    "43": {
+        "name": "Archon III",
+        "mmr": 2600
+    },
+    "44": {
+        "name": "Archon IV",
+        "mmr": 2700
+    },
+    "45": {
+        "name": "Archon V",
+        "mmr": 2800
+    },
+    "51": {
+        "name": "Legend I",
+        "mmr": 2900
+    },
+    "52": {
+        "name": "Legend II",
+        "mmr": 3000
+    },
+    "53": {
+        "name": "Legend III",
+        "mmr": 3100
+    },
+    "54": {
+        "name": "Legend IV",
+        "mmr": 3200
+    },
+    "55": {
+        "name": "Legend V",
+        "mmr": 3300
+    },
+    "61": {
+        "name": "Ancient I",
+        "mmr": 3400
+    },
+    "62": {
+        "name": "Ancient II",
+        "mmr": 3600
+    },
+    "63": {
+        "name": "Ancient III",
+        "mmr": 3800
+    },
+    "64": {
+        "name": "Ancient IV",
+        "mmr": 4000
+    },
+    "65": {
+        "name": "Ancient V",
+        "mmr": 4200
+    },
+    "71": {
+        "name": "Divine I",
+        "mmr": 4400
+    },
+    "72": {
+        "name": "Divine II",
+        "mmr": 4600
+    },
+    "73": {
+        "name": "Divine III",
+        "mmr": 4800
+    },
+    "74": {
+        "name": "Divine IV",
+        "mmr": 5000
+    },
+    "75": {
+        "name": "Divine V",
+        "mmr": 5200
+    },
+    "80": {
+        "name": "Immortal",
+        "mmr": 6000
+    },
+    "0": {
+        "name": "Неизвестен",
+        "mmr": 0
+    }
 }

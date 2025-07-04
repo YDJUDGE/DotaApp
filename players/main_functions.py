@@ -13,9 +13,10 @@ def load_rank_mapping():
             with open(file_path, "r", encoding="utf-8") as f:
                 _rank_mapping = json.load(f)
         except Exception as e:
-            print(f"❌ Не удалось загрузить ranks.json: {e}")
+            print(f"❌ Ошибка загрузки ranks.json: {e}")
             _rank_mapping = {}
     return _rank_mapping
+
 
 
 def calculate_winrate(matches):
