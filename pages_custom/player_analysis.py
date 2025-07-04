@@ -3,7 +3,6 @@ from players.main_function import fetch_last_matches_detailed, fetch_player_prof
 from players.main_functions import calculate_skill_score, get_roles_from_matches, calculate_transfer_price, \
     load_rank_mapping
 from players.classification import classify_player, calculate_role_modifier
-from players.main_function import fetch_player_rank
 
 def player_analysis_page():
     st.title("💎 Анализ игрока Dota 2 и оценка трансферной стоимости")

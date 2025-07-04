@@ -49,11 +49,3 @@ def fetch_player_profile(account_id):
         return profile
     return {}
 
-def fetch_player_rank(account_id):
-    url = f"https://api.opendota.com/api/players/{account_id}/ratings"
-    response = requests.get(url)
-    if response.status_code == 200 and response.json():
-        rank_tier = response.json()[0].get("rank_tier", 0)
-        return rank_tier
-    return 0
-
