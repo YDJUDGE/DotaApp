@@ -36,9 +36,6 @@ def fetch_last_matches_detailed(account_id, limit=100):
             if player_data:
                 player_data["match_id"] = match_id
                 detailed_matches.append(player_data)
-                print(f"✅ Добавляем матч {match_id} — режим {game_mode}, лобби {lobby_type}")
-        else:
-            print(f"❌ Пропускаем матч {match_id} — режим {game_mode}, лобби {lobby_type}")
 
         time.sleep(0.05)
 
