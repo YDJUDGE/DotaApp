@@ -4,23 +4,18 @@ def classify_player(matches):
     total_tower_damage = sum(m.get('tower_damage', 0) for m in matches)
     total_healing = sum(m.get('hero_healing', 0) for m in matches)
 
-    avg_hero_damage = total_hero_damage / len(matches)
-    avg_tower_damage = total_tower_damage / len(matches)
-    avg_healing = total_healing / len(matches)
+    total = total_hero_damage + total_tower_damage + total_healing + 1
 
-    # Сумма всех трёх — для пропорций
-    total = avg_hero_damage + avg_tower_damage + avg_healing + 1e-6
+    hero_damage_share = total_hero_damage / total
+    tower_damage_share = total_tower_damage / total
+    healing_share = total_healing / total
 
-    dmg_share = avg_hero_damage / total
-    tower_share = avg_tower_damage / total
-    heal_share = avg_healing / total
-
-    if heal_share > 0.35 and heal_share > dmg_share and heal_share > tower_share:
-        return "Хорошая поддержка / Доктор"
-    elif tower_share > 0.35 and tower_share > dmg_share:
-        return "Разрушитель построек"
-    elif dmg_share > 0.5:
+    if hero_damage_share > tower_damage_share and hero_damage_share > healing_share:
         return "Инициатор / Воин"
+    elif tower_damage_share > hero_damage_share and tower_damage_share > healing_share:
+        return "Разрушитель построек"
+    elif healing_share > hero_damage_share and healing_share > tower_damage_share:
+        return "Хорошая поддержка / Доктор"
     else:
         return "Универсальный игрок"
 

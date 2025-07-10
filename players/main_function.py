@@ -1,9 +1,9 @@
 import requests
 import time
 
-ALLOWED_GAME_MODES = {2, 12, 16, 22}
+ALLOWED_GAME_MODES = {1, 2, 3, 4, 5, 16, 17, 22}
 
-ALLOWED_LOBBY_TYPES = {5, 6, 7, 9}
+ALLOWED_LOBBY_TYPES = {0, 2, 5, 6, 7, 9}
 
 def fetch_last_matches_detailed(account_id, limit=100):
     base_url = f"https://api.opendota.com/api/players/{account_id}/matches?limit={limit}"
