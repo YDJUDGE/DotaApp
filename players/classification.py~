@@ -4,20 +4,41 @@ def classify_player(matches):
     total_tower_damage = sum(m.get('tower_damage', 0) for m in matches)
     total_healing = sum(m.get('hero_healing', 0) for m in matches)
 
-    total = total_hero_damage + total_tower_damage + total_healing + 1
+    avg_hero_damage = total_hero_damage / len(matches)
+    avg_tower_damage = total_tower_damage / len(matches)
+    avg_healing = total_healing / len(matches)
 
-    hero_damage_share = total_hero_damage / total
-    tower_damage_share = total_tower_damage / total
-    healing_share = total_healing / total
+    total = avg_hero_damage + avg_tower_damage + avg_healing + 1e-6
+    print(total)
 
-    if hero_damage_share > tower_damage_share and hero_damage_share > healing_share:
-        return "Инициатор / Воин"
-    elif tower_damage_share > hero_damage_share and tower_damage_share > healing_share:
-        return "Разрушитель построек"
-    elif healing_share > hero_damage_share and healing_share > tower_damage_share:
+    dmg_share = avg_hero_damage / total
+    print(dmg_share)
+    tower_share = avg_tower_damage / total
+    print(tower_share)
+    heal_share = avg_healing / total
+    print(heal_share)
+
+    is_healer = heal_share >= 0.13
+    is_pusher = tower_share >= 0.20
+    is_damage_dealer = dmg_share >= 0.6
+
+    if is_healer and is_pusher:
+        return "Поддержка-Пушер"
+    elif is_healer and is_damage_dealer:
+        return "Боевая поддержка"
+    elif is_pusher and is_damage_dealer:
+        return "Гибрид: Воин-Пушер"
+    elif is_damage_dealer and tower_share > 0.15:
+        return "Воин с уклоном в пуш"
+    elif is_healer:
         return "Хорошая поддержка / Доктор"
+    elif is_pusher:
+        return "Разрушитель построек"
+    elif is_damage_dealer:
+        return "Инициатор / Воин"
     else:
         return "Универсальный игрок"
+
 
 def normalize_roles_for_modifier(roles):
     """
