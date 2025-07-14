@@ -69,10 +69,10 @@ def player_analysis_page():
         )
         salary = calculate_salary(
             transfer_price=transfer_price,
-            mmr=mmr_for_calc,
             role_modifier=role_modifier,
             behavior_coeff=behavior_coeff,
             media_score=media_score,
+            mmr=mmr_text
         )
 
 

@@ -64,34 +64,39 @@ def calculate_skill_score(matches):
     return round(total, 2)
 
 def get_roles_from_matches(matches):
+    """
+    Определяем роли игрока по матчам, основываясь на долях урона по героям, лечению и урону по зданиям.
+    Возвращаем топ-2 роли.
+    """
     roles_counter = Counter()
 
     for m in matches:
         dmg = m.get("hero_damage", 0)
         heal = m.get("hero_healing", 0)
         bld = m.get("tower_damage", 0)
-        total = dmg + heal + bld + 1  # защита от деления на 0
+        total = dmg + heal + bld + 1
 
         share_dmg = dmg / total
         share_heal = heal / total
         share_bld = bld / total
 
+        # Логика с порогами (примерные, можно подбирать)
         if share_dmg > 0.5 and share_bld > 0.2:
-            roles_counter["Керри"] += 1
+            roles_counter["Carry"] += 1
         elif share_heal > 0.25 or (share_dmg < 0.4 and share_heal > 0.15):
-            roles_counter["Саппорт"] += 1
+            roles_counter["Support"] += 1
         elif share_dmg > 0.55 and share_bld < 0.1 and share_heal < 0.1:
-            roles_counter["Инициатор"] += 1
+            roles_counter["Initiator"] += 1
         elif share_bld > 0.4 and share_dmg < 0.4:
-            roles_counter["Пушер"] += 1
+            roles_counter["Pusher"] += 1
         elif abs(share_dmg - share_heal) < 0.15 and abs(share_dmg - share_bld) < 0.15:
-            roles_counter["Универсал"] += 1
+            roles_counter["Durable"] += 1  # Можно так считать "универсал" как "танк"
         else:
-            roles_counter["Другое"] += 1
+            roles_counter["Disabler"] += 1
 
-    # Оставим только топ-2 роли
     most_common = roles_counter.most_common(2)
     return [role for role, _ in most_common]
+
 
 
 def calculate_transfer_price(skill_score, mmr, media_score,
@@ -103,3 +108,26 @@ def calculate_transfer_price(skill_score, mmr, media_score,
     transfer_price = adjusted_score * base_rate
     return round(transfer_price, 2)
 
+def calculate_salary(transfer_price: float, mmr: int, role_modifier: float = 1.0, behavior_coeff: float = 1.0, media_score: float = 3) -> float:
+    """Возвращает месячную примерную зп"""
+
+    if mmr >= 7000:
+        base_percent = 0.06
+    elif mmr >= 6000:
+        base_percent = 0.045
+    elif mmr >= 5000:
+        base_percent = 0.035
+    elif mmr >= 4000:
+        base_percent = 0.025
+    elif mmr >= 3000:
+        base_percent = 0.015
+    else:
+        base_percent = 0.01
+
+    base_salary = transfer_price * base_percent
+    media_bonus = media_score * 100
+    behavior_penalty = 1.0 if behavior_coeff >= 1.0 else behavior_coeff
+
+    # Финальный расчёт
+    final_salary = base_salary * role_modifier * behavior_penalty + media_bonus
+    return round(final_salary, 2

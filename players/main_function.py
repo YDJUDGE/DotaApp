@@ -1,7 +1,7 @@
 import requests
 import time
 
-ALLOWED_GAME_MODES = {1, 2, 3, 4, 5, 16, 17, 22}
+ALLOWED_GAME_MODES = {1, 2, 3, 4, 5, 22}
 
 ALLOWED_LOBBY_TYPES = {0, 2, 5, 6, 7, 9}
 

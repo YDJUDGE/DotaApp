@@ -108,3 +108,26 @@ def calculate_transfer_price(skill_score, mmr, media_score,
     transfer_price = adjusted_score * base_rate
     return round(transfer_price, 2)
 
+def calculate_salary(transfer_price: float, mmr: int, role_modifier: float = 1.0, behavior_coeff: float = 1.0, media_score: float = 3) -> float:
+    """Возвращает месячную примерную зп"""
+
+    if mmr >= 7000:
+        base_percent = 0.06
+    elif mmr >= 6000:
+        base_percent = 0.045
+    elif mmr >= 5000:
+        base_percent = 0.035
+    elif mmr >= 4000:
+        base_percent = 0.025
+    elif mmr >= 3000:
+        base_percent = 0.015
+    else:
+        base_percent = 0.01
+
+    base_salary = transfer_price * base_percent
+    media_bonus = media_score * 100
+    behavior_penalty = 1.0 if behavior_coeff >= 1.0 else behavior_coeff
+
+    # Финальный расчёт
+    final_salary = base_salary * role_modifier * behavior_penalty + media_bonus
+    return round(final_salary, 2)
