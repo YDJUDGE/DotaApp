@@ -19,16 +19,16 @@ def player_analysis_page():
             st.error("Введите корректный числовой Account ID")
             return
 
-        with st.spinner("🧠 Анализируем игрока. Считаем стоимость, Это заёмет несколько минут"):
+        with st.spinner("🧠 Анализируем игрока. Считаем стоимость, Это займёт меньше минуты"):
+
             profile = fetch_player_profile(account_id_int)
-            matches = fetch_last_matches_detailed(account_id_int)
+            matches = fetch_last_matches_detailed(account_id_int, limit=100)
             rank_mapping = load_rank_mapping()
 
             rank_tier = profile.get("rank_tier", 0)
             rank_info = rank_mapping.get(str(rank_tier), {"name": "неизвестно", "mmr": 0})
             rank_name = rank_info["name"]
             estimated_mmr = rank_info["mmr"]
-
 
         if not matches or len(matches) < 10:
             st.error("Не удалось получить матчи или их слишком мало")
@@ -75,7 +75,6 @@ def player_analysis_page():
             media_score=media_score,
         )
 
-
         st.markdown(f"""
             ## Результаты анализа для аккаунта {account_id}
 
@@ -89,5 +88,3 @@ def player_analysis_page():
             - **Рекомендуемая трансферная стоимость:** ${transfer_price}
             - **Ориентировочная месячная зарплата:** ${salary}
             """)
-
-

@@ -1,46 +1,78 @@
 import requests
-import time
+import asyncio
+import aiohttp
 
 ALLOWED_GAME_MODES = {1, 2, 3, 4, 5, 22}
 
 ALLOWED_LOBBY_TYPES = {0, 2, 5, 6, 7, 9}
 
-def fetch_last_matches_detailed(account_id, limit=100):
-    base_url = f"https://api.opendota.com/api/players/{account_id}/matches?limit={limit}"
-    response = requests.get(base_url)
-    if response.status_code != 200:
-        return []
+MAX_CONCURRENT_REQUESTS = 5  # Ограничим одновременные запросы
 
-    basic_matches = response.json()
-    detailed_matches = []
+# Общий семафор
+semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
 
-    for match in basic_matches:
-        match_id = match.get("match_id")
-        if not match_id:
-            continue
+async def fetch_match(session, match_id, account_id, semaphore, retries=3):
+    url = f"https://api.opendota.com/api/matches/{match_id}"
+    async with semaphore:
+        for attempt in range(retries):
+            try:
+                async with session.get(url) as resp:
+                    if resp.status == 429:
+                        wait = 3 + attempt * 2
+                        await asyncio.sleep(wait)
+                        continue
+                    elif resp.status != 200:
+                        return None
 
-        match_url = f"https://api.opendota.com/api/matches/{match_id}"
-        match_resp = requests.get(match_url)
+                    full_match = await resp.json()
+                    game_mode = full_match.get("game_mode")
+                    lobby_type = full_match.get("lobby_type")
 
-        if match_resp.status_code != 200:
-            continue
+                    if game_mode not in ALLOWED_GAME_MODES or lobby_type not in ALLOWED_LOBBY_TYPES:
+                        return None
 
-        full_match = match_resp.json()
+                    player_data = next(
+                        (p for p in full_match.get("players", []) if p.get("account_id") == account_id), None)
+                    if not player_data:
+                        return None
 
-        game_mode = full_match.get("game_mode")
-        lobby_type = full_match.get("lobby_type")
+                    player_data["match_id"] = match_id
+                    return player_data
 
-        if game_mode in ALLOWED_GAME_MODES and lobby_type in ALLOWED_LOBBY_TYPES:
-            # Найдём игрока с нужным account_id
-            player_data = next((p for p in full_match.get("players", []) if p.get("account_id") == account_id), None)
-            if player_data:
-                player_data["match_id"] = match_id
-                detailed_matches.append(player_data)
+            except Exception as e:
+                await asyncio.sleep(1)
+        return None
 
-        time.sleep(0.05)
 
-    return detailed_matches
+async def fetch_last_matches_detailed_async(account_id, limit=100, progress_callback=None):
+    semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
+    async with aiohttp.ClientSession() as session:
+        base_url = f"https://api.opendota.com/api/players/{account_id}/matches?limit={limit}"
+        async with session.get(base_url) as resp:
+            if resp.status != 200:
+                return []
 
+            basic_matches = await resp.json()
+
+        batch_size = 15
+        detailed_matches = []
+
+        for i in range(0, len(basic_matches), batch_size):
+            batch = basic_matches[i:i + batch_size]
+            tasks = [fetch_match(session, m['match_id'], account_id, semaphore) for m in batch if m.get('match_id')]
+            results = await asyncio.gather(*tasks)
+            valid_results = [r for r in results if r]
+            detailed_matches.extend(valid_results)
+
+            if progress_callback:
+                progress_callback(len(detailed_matches), limit)
+
+            await asyncio.sleep(0.7)
+
+        return detailed_matches
+
+def fetch_last_matches_detailed(account_id, limit=100, progress_callback=None):
+    return asyncio.run(fetch_last_matches_detailed_async(account_id, limit, progress_callback))
 
 
 def fetch_player_profile(account_id):
