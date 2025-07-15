@@ -4,12 +4,27 @@ from heroes.special_functions import get_contribution_label
 from heroes.chart import plot_kda_stats
 from datetime import datetime
 from heroes.main_function import fetch_hero_by_match
+import json
+
+with open("data/heroes.json", encoding="utf-8") as f:
+    heroes = json.load(f)
+
+hero_name_to_id = {name: int(id_) for id_, name in heroes.items()}
+hero_id_to_name = {int(id_): name for id_, name in heroes.items()}
+
 
 def hero_analysis_page():
     st.title("📊 Анализ героев в Dota 2")
 
     with st.sidebar:
-        hero_id = st.number_input("Введите Hero ID", min_value=1, value=1)
+        search_mode = st.radio("Как выбрать героя?", ["По ID", "По имени"])
+
+        if search_mode == "По ID":
+            hero_id = st.number_input("Введите Hero ID", min_value=1, value=1)
+        else:
+            hero_name = st.selectbox("Выберите героя", sorted(hero_name_to_id.keys()))
+            hero_id = hero_name_to_id[hero_name]
+
         match_count = st.slider("Количество матчей", 10, 50, 100)
         run = st.button("🔍 Проанализировать")
 
@@ -28,8 +43,9 @@ def hero_analysis_page():
 
         matches = st.session_state["heroes"]
         hero_id = st.session_state["hero_id"]
+        hero_name = hero_id_to_name.get(hero_id, f"ID: {hero_id}")
 
-        st.subheader(f"Результаты анализа (Hero ID: {hero_id})")
+        st.subheader(f"Результаты анализа героя: {hero_name}")
 
         for match in matches:
             k, d, a = match["kills"], match["deaths"], match["assists"]

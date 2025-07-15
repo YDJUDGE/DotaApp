@@ -123,32 +123,13 @@ def player_analysis_page():
             ("Месячная зарплата", f"${salary:,.2f}")
         ]
 
-        label_width = 70
-        value_width = 100
-        line_height = 10
-
         for label, value in data:
-            # Добавляем пробел после $ для читаемости
-            if isinstance(value, str) and value.startswith("$"):
-                value = value.replace("$", "$ ")
-
-            # Жирный шрифт для метки
             pdf.set_font("DejaVu", "B", 12)
-            pdf.cell(label_width, line_height, txt=label + ":", border=0)
-
-            # Обычный шрифт для значения
+            pdf.cell(60, 10, txt=label + ":", ln=0)
             pdf.set_font("DejaVu", "", 12)
-            pdf.cell(value_width, line_height, txt=str(value), border=0, ln=1)
+            pdf.cell(0, 10, txt=str(value), ln=1)
 
-            # Линия-разделитель
-            x_left = pdf.l_margin
-            x_right = pdf.w - pdf.r_margin
-            y = pdf.get_y()
-            pdf.set_draw_color(200, 200, 200)
-            pdf.line(x_left, y, x_right, y)
-            pdf.set_draw_color(0, 0, 0)
-
-        # Подпись внизу
+        # Подпись
         pdf.ln(5)
         pdf.set_font("DejaVu", "", 10)
         pdf.set_text_color(150, 150, 150)
@@ -162,5 +143,4 @@ def player_analysis_page():
             file_name=f"player_{account_id}_summary.pdf",
             mime="application/pdf"
         )
-
 

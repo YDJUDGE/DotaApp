@@ -112,15 +112,15 @@ def calculate_salary(transfer_price: float, mmr: int, role_modifier: float = 1.0
     """Возвращает месячную примерную зп"""
 
     if mmr >= 7000:
-        base_percent = 0.06
-    elif mmr >= 6000:
         base_percent = 0.045
-    elif mmr >= 5000:
+    elif mmr >= 6000:
         base_percent = 0.035
-    elif mmr >= 4000:
+    elif mmr >= 5000:
         base_percent = 0.025
+    elif mmr >= 4000:
+        base_percent = 0.019
     elif mmr >= 3000:
-        base_percent = 0.015
+        base_percent = 0.011
     else:
         base_percent = 0.01
 
