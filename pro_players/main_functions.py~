@@ -3,7 +3,7 @@ import json
 import requests
 from collections import Counter
 from pro_players.main_function import fetch_player_profile, \
-    fetch_last_pro_matches_for_player, get_pro_player_team
+    fetch_pro_matches_detailed
 from players.main_functions import (
     calculate_skill_score,
     get_roles_from_matches,
@@ -80,16 +80,24 @@ def analyze_pro_player(account_id: int, match_limit: int = 100):
         print(f"[ERROR] Не удалось загрузить профиль игрока {account_id}")
         return None, "Ошибка загрузки профиля игрока"
 
-    matches = asyncio.run(fetch_last_pro_matches_for_player(account_id, match_limit))
+    # Сначала получаем список ID матчей
+    match_ids = fetch_match_ids(account_id, limit=match_limit)
+
+    if not match_ids:
+        print(f"[ERROR] Не удалось загрузить матчи для игрока {account_id}")
+        return None, "Недостаточно матчей для анализа"
+
+    # Теперь уже получаем подробности матчей асинхронно
+    matches = fetch_pro_matches_detailed(account_id, match_ids)
 
     if not matches:
-        print(f"[ERROR] Не загружено ни одного pro-матча для игрока {account_id}")
+        print(f"[ERROR] Не загружено ни одного подробного pro-матча для игрока {account_id}")
         return None, "Недостаточно матчей для анализа"
     elif len(matches) < 10:
-        print(f"[WARN] Найдено только {len(matches)} pro-матчей для анализа (нужно ≥10)")
+        print(f"[WARN] Найдено только {len(matches)} подробных pro-матчей для анализа (нужно ≥10)")
         return None, "Недостаточно матчей для анализа"
 
-    print(f"[INFO] Найдено {len(matches)} pro-матчей для анализа")
+    print(f"[INFO] Найдено {len(matches)} подробных pro-матчей для анализа")
 
     # Всё как раньше — ранги, mmr и прочее...
     rank_mapping = load_rank_mapping()
@@ -138,7 +146,6 @@ def analyze_pro_player(account_id: int, match_limit: int = 100):
     )
 
     top_heroes = get_top_heroes_with_winrate(matches)
-    team_name = get_pro_player_team(account_id)
 
     result = {
         "account_id": account_id,
@@ -152,7 +159,6 @@ def analyze_pro_player(account_id: int, match_limit: int = 100):
         "transfer_price": transfer_price,
         "salary": salary,
         "top_heroes": top_heroes,
-        "team_name": team_name
     }
 
     return result, None
