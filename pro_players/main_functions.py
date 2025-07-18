@@ -74,8 +74,6 @@ def analyze_pro_player(account_id: int, match_limit: int = 100):
     print(f"[INFO] Анализируем pro игрока с ID: {account_id}")
     profile = fetch_player_profile(account_id)
 
-    print("Team name:", profile.get("team_name", "Нет команды"))
-
     if not profile:
         print(f"[ERROR] Не удалось загрузить профиль игрока {account_id}")
         return None, "Ошибка загрузки профиля игрока"

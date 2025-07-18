@@ -97,7 +97,7 @@ async def fetch_last_pro_matches_for_player(account_id, limit=100):
             print(f"[DEBUG] Успешно загружено матчей: {len(successful)}")
             detailed_matches.extend(successful)
 
-            await asyncio.sleep(2)  # задержка между батчами
+            await asyncio.sleep(0.7)  # задержка между батчами
 
         print(f"[DEBUG] Всего загружено подробных pro матчей: {len(detailed_matches)}")
         return detailed_matches
