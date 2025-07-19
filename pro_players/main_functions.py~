@@ -74,8 +74,6 @@ def analyze_pro_player(account_id: int, match_limit: int = 100):
     print(f"[INFO] Анализируем pro игрока с ID: {account_id}")
     profile = fetch_player_profile(account_id)
 
-    print("Team name:", profile.get("team_name", "Нет команды"))
-
     if not profile:
         print(f"[ERROR] Не удалось загрузить профиль игрока {account_id}")
         return None, "Ошибка загрузки профиля игрока"
@@ -139,9 +137,11 @@ def analyze_pro_player(account_id: int, match_limit: int = 100):
 
     top_heroes = get_top_heroes_with_winrate(matches)
     team_name = get_pro_player_team(account_id)
+    nickname = profile.get("profile", {}).get("personaname", "Unknown Player")
 
     result = {
         "account_id": account_id,
+        "Игрок": nickname,
         "skill_score": skill_score,
         "rank_name": rank_name,
         "mmr_text": mmr_text,

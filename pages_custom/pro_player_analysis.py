@@ -1,5 +1,69 @@
 import streamlit as st
 from pro_players.main_functions import analyze_pro_player
+from fpdf import FPDF
+import os
+
+
+def generate_pdf_summary(result):
+    pdf = FPDF()
+    pdf.add_page()
+
+    font_path_regular = os.path.join("assets", "fonts", "DejaVuSans.ttf")
+    font_path_bold = os.path.join("assets", "fonts", "DejaVuSans-Bold.ttf")
+
+    pdf.add_font("DejaVu", "", font_path_regular, uni=True)
+    pdf.add_font("DejaVu", "B", font_path_bold, uni=True)
+
+    pdf.set_font("DejaVu", size=18)
+    pdf.set_text_color(30, 30, 30)
+    pdf.cell(0, 10, txt="Резюме про игрока Dota 2", ln=True, align="C")
+    pdf.ln(8)
+
+    pdf.set_font("DejaVu", "B", 12)
+    pdf.set_text_color(0, 0, 0)
+
+    data = [
+        ("Steam ID", result["account_id"]),
+        ("Ник", result["nickname"]),
+        ("Команда", result["team_name"]),
+        ("Skill Score", f"{result['skill_score']:.2f}"),
+        ("Звание", result["rank_name"]),
+        ("MMR", result["mmr_text"]),
+        ("Роли", ', '.join(result["roles"]) if result["roles"] else 'Не определено'),
+        ("Модификатор роли", result["role_modifier"]),
+        ("Бонус универсальности", result["versatility_bonus"]),
+        ("Тип игрока", result["player_class"]),
+        ("Трансферная стоимость", f"${result['transfer_price']:,.2f}"),
+        ("Месячная зарплата", f"${result['salary']:,.2f}"),
+    ]
+
+    label_width = 70
+    value_width = 100
+    line_height = 10
+
+    for label, value in data:
+        if isinstance(value, str) and value.startswith("$"):
+            value = value.replace("$", "$ ")
+
+        pdf.set_font("DejaVu", "B", 12)
+        pdf.cell(label_width, line_height, txt=label + ":", border=0)
+
+        pdf.set_font("DejaVu", "", 12)
+        pdf.cell(value_width, line_height, txt=str(value), border=0, ln=1)
+
+        x_left = pdf.l_margin
+        x_right = pdf.w - pdf.r_margin
+        y = pdf.get_y()
+        pdf.set_draw_color(220, 220, 220)
+        pdf.line(x_left, y, x_right, y)
+        pdf.set_draw_color(0, 0, 0)
+
+    pdf.ln(6)
+    pdf.set_font("DejaVu", "", 10)
+    pdf.set_text_color(150, 150, 150)
+    pdf.cell(0, 10, txt="Сформировано автоматически", ln=1, align="R")
+
+    return bytes(pdf.output(dest="S"))
 
 
 def pro_player_analysis_page():
@@ -28,8 +92,10 @@ def pro_player_analysis_page():
         ## 📊 Результаты анализа про-игрока (Steam ID: {result['account_id']})
 
         - **Skill Score:** {result['skill_score']}
+        - **Ник:** {result['nickname']}
         - **Звание:** {result['rank_name']}
         - **MMR:** {result['mmr_text']}
+        - **Команда** {result['team_name']}
         - **Роли (играет):** {', '.join(result['roles']) if result['roles'] else 'Не определено'}
         - **Модификатор роли:** {result['role_modifier']}
         - **Бонус универсальности:** {result['versatility_bonus']}
@@ -39,12 +105,28 @@ def pro_player_analysis_page():
         """)
 
         st.markdown("### 🏆 Топ-5 часто используемых героев:")
-        for i, hero_info in enumerate(result["top_heroes"], 1):
-            hero_name = hero_info['hero_name']
-            count = hero_info['count']
-            winrate = hero_info['winrate']
-            st.markdown(f"**{i}.** Герой: **{hero_name}** — использован {count} раз — винрейт {winrate:.1f}%")
+
+        for i, hero in enumerate(result["top_heroes"], 1):
+            hero_name = hero["hero_name"]
+            count = hero["count"]
+            winrate = hero["winrate"]
+
+            with st.container():
+                col1, col2, col3 = st.columns([1, 3, 2])
+                col1.markdown(f"**{i}.**")
+                col2.markdown(f"🧙 **{hero_name}**")
+                col3.markdown(f"🎮 **Матчей:** {count}  \n💯 **WR:** {winrate:.1f}%")
+                st.markdown("---")
 
         st.info("📌 Анализ основан на последних 100 матчах.")
         st.info(
             "⚠️ Внимание: из-за ограничений API и фильтров в выборку могут попасть не все матчи игрока, результаты анализа — приближённые.")
+
+        # PDF кнопка
+        pdf_bytes = generate_pdf_summary(result)
+        st.download_button(
+            label="📥 Скачать PDF-резюме",
+            data=pdf_bytes,
+            file_name=f"pro_player_{result['account_id']}_summary.pdf",
+            mime="application/pdf"
+        )

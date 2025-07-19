@@ -6,6 +6,7 @@ MAX_CONCURRENT_REQUESTS = 5
 ALLOWED_GAME_MODES = {2}
 ALLOWED_LOBBY_TYPES = {7}
 
+
 async def fetch_match_details(session, match_id, account_id, semaphore, retries=2):
     url = f"https://api.opendota.com/api/matches/{match_id}"
     async with semaphore:
@@ -27,7 +28,7 @@ async def fetch_match_details(session, match_id, account_id, semaphore, retries=
 
                     match = await resp.json()
                     if (match.get("lobby_type") not in ALLOWED_LOBBY_TYPES
-                        and match.get("game_mode") not in ALLOWED_GAME_MODES):
+                            and match.get("game_mode") not in ALLOWED_GAME_MODES):
                         print(f"[SKIP] Match {match_id} не подходит по фильтру")
                         return None
 
@@ -43,7 +44,6 @@ async def fetch_match_details(session, match_id, account_id, semaphore, retries=
             except Exception as e:
                 print(f"[ERROR] Exception while fetching match {match_id}: {e}")
                 return None
-
 
 
 def get_pro_player_team(account_id):
@@ -73,7 +73,8 @@ async def fetch_last_pro_matches_for_player(account_id, limit=100):
             print(f"[DEBUG] Получено {len(base_matches)} матчей (всего)")
 
         pro_and_captains_matches = [
-            m for m in base_matches if m.get("lobby_type") in ALLOWED_LOBBY_TYPES or m.get("game_mode") in ALLOWED_GAME_MODES
+            m for m in base_matches if
+            m.get("lobby_type") in ALLOWED_LOBBY_TYPES or m.get("game_mode") in ALLOWED_GAME_MODES
         ]
 
         print(f"[DEBUG] Отфильтровано pro матчей: {len(pro_and_captains_matches)}")
@@ -97,7 +98,7 @@ async def fetch_last_pro_matches_for_player(account_id, limit=100):
             print(f"[DEBUG] Успешно загружено матчей: {len(successful)}")
             detailed_matches.extend(successful)
 
-            await asyncio.sleep(0.7)  # задержка между батчами
+            await asyncio.sleep(2)  # задержка между батчами
 
         print(f"[DEBUG] Всего загружено подробных pro матчей: {len(detailed_matches)}")
         return detailed_matches
@@ -105,15 +106,20 @@ async def fetch_last_pro_matches_for_player(account_id, limit=100):
 
 async def fetch_player_profile_async(account_id):
     url = f"https://api.opendota.com/api/players/{account_id}"
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as resp:
-            if resp.status != 200:
-                text = await resp.text()
-                print(f"[ERROR] Failed to fetch player profile: status {resp.status}, response: {text}")
-                return None
-            return await resp.json()
-
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    return data  # возвращаем весь объект, не только строку
+                else:
+                    print(f"[ERROR] Failed to fetch player profile: {response.status}")
+                    return None
+    except Exception as e:
+        print(f"[ERROR] Exception while fetching player profile: {e}")
+        return None
 
 
 def fetch_player_profile(account_id):
     return asyncio.run(fetch_player_profile_async(account_id))
+
