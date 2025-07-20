@@ -1,21 +1,23 @@
 import aiohttp
 import asyncio
-import requests
 
-MAX_CONCURRENT_REQUESTS = 5
+MAX_CONCURRENT_REQUESTS = 10  # Увеличили для ускорения
 ALLOWED_GAME_MODES = {2}
 ALLOWED_LOBBY_TYPES = {7}
+API_KEY = ""  # Вставь свой API-ключ от OpenDota, если есть[](https://www.opendota.com/api-keys)
 
-
-async def fetch_match_details(session, match_id, account_id, semaphore, retries=2):
+async def fetch_match_details(session, match_id, account_id, semaphore, retries=3):
+    """Получение деталей матча с учётом лимитов API."""
     url = f"https://api.opendota.com/api/matches/{match_id}"
+    params = {"api_key": API_KEY} if API_KEY else {}
     async with semaphore:
         for attempt in range(retries + 1):
             try:
-                async with session.get(url) as resp:
+                async with session.get(url, params=params) as resp:
                     if resp.status == 429:
+                        retry_after = resp.headers.get('Retry-After')
+                        wait_time = float(retry_after) if retry_after else (2 ** attempt) + 3
                         if attempt < retries:
-                            wait_time = 3 + attempt * 2
                             print(f"[WARN] Match {match_id} - 429 Too Many Requests. Retry in {wait_time}s")
                             await asyncio.sleep(wait_time)
                             continue
@@ -45,32 +47,37 @@ async def fetch_match_details(session, match_id, account_id, semaphore, retries=
                 print(f"[ERROR] Exception while fetching match {match_id}: {e}")
                 return None
 
-
-def get_pro_player_team(account_id):
-    response = requests.get("https://api.opendota.com/api/proPlayers")
-    if response.status_code == 200:
-        players = response.json()
-        for p in players:
-            if p["account_id"] == account_id:
-                return p.get("team_name", "Неизвестно\Нет")
-    return "Неизвестно"
-
-
-async def fetch_last_pro_matches_for_player(account_id, limit=100):
+async def fetch_last_pro_matches_for_player(account_id, limit=100):  # Оставили 100
+    """Получение последних pro-матчей игрока с оптимизацией запросов."""
     url = f"https://api.opendota.com/api/players/{account_id}/matches"
-    params = {"limit": limit}
+    params = {"limit": limit, "api_key": API_KEY} if API_KEY else {"limit": limit}
 
     print(f"[DEBUG] Запрашиваем последние {limit} матчей игрока {account_id}")
     semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
 
     async with aiohttp.ClientSession() as session:
-        async with session.get(url, params=params) as resp:
-            if resp.status != 200:
-                print(f"[ERROR] Can't fetch base matches list: {resp.status}")
-                return []
+        try:
+            async with session.get(url, params=params) as resp:
+                if resp.status == 429:
+                    retry_after = resp.headers.get('Retry-After')
+                    wait_time = float(retry_after) if retry_after else 10
+                    print(f"[WARN] 429 on match list fetch. Waiting {wait_time}s")
+                    await asyncio.sleep(wait_time)
+                    async with session.get(url, params=params) as resp_retry:
+                        if resp_retry.status != 200:
+                            print(f"[ERROR] Can't fetch base matches list: {resp_retry.status}")
+                            return []
+                        base_matches = await resp_retry.json()
+                elif resp.status != 200:
+                    print(f"[ERROR] Can't fetch base matches list: {resp.status}")
+                    return []
+                else:
+                    base_matches = await resp.json()
+        except Exception as e:
+            print(f"[ERROR] Exception fetching match list: {e}")
+            return []
 
-            base_matches = await resp.json()
-            print(f"[DEBUG] Получено {len(base_matches)} матчей (всего)")
+        print(f"[DEBUG] Получено {len(base_matches)} матчей (всего)")
 
         pro_and_captains_matches = [
             m for m in base_matches if
@@ -83,8 +90,9 @@ async def fetch_last_pro_matches_for_player(account_id, limit=100):
             print(f"[WARN] Нет pro матчей у игрока {account_id}")
             return []
 
-        batch_size = 15
+        batch_size = 10
         detailed_matches = []
+        rate_limit_delay = 0.6  # Уменьшили для 10 запросов
 
         for i in range(0, len(pro_and_captains_matches), batch_size):
             batch = pro_and_captains_matches[i:i + batch_size]
@@ -98,28 +106,38 @@ async def fetch_last_pro_matches_for_player(account_id, limit=100):
             print(f"[DEBUG] Успешно загружено матчей: {len(successful)}")
             detailed_matches.extend(successful)
 
-            await asyncio.sleep(2)  # задержка между батчами
+            await asyncio.sleep(len(batch) * rate_limit_delay)
 
         print(f"[DEBUG] Всего загружено подробных pro матчей: {len(detailed_matches)}")
         return detailed_matches
 
+async def get_pro_player_team(account_id):
+    async with aiohttp.ClientSession() as session:
+        async with session.get("https://api.opendota.com/api/proPlayers", params={"api_key": API_KEY} if API_KEY else {}) as response:
+            if response.status == 200:
+                players = await response.json()
+                for p in players:
+                    if p["account_id"] == account_id:
+                        team_name = p.get("team_name", "Неизвестно\Нет")
+                        print(f"[INFO] Found team for {account_id}: {team_name}")
+                        return team_name
+                print(f"[WARN] Player {account_id} not found in proPlayers API")
+            else:
+                print(f"[ERROR] Failed to fetch proPlayers: {response.status}")
+            return "Неизвестно"
 
-async def fetch_player_profile_async(account_id):
+async def fetch_player_profile(account_id):
     url = f"https://api.opendota.com/api/players/{account_id}"
+    params = {"api_key": API_KEY} if API_KEY else {}
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
+            async with session.get(url, params=params) as response:
                 if response.status == 200:
                     data = await response.json()
-                    return data  # возвращаем весь объект, не только строку
+                    return data
                 else:
                     print(f"[ERROR] Failed to fetch player profile: {response.status}")
                     return None
     except Exception as e:
         print(f"[ERROR] Exception while fetching player profile: {e}")
         return None
-
-
-def fetch_player_profile(account_id):
-    return asyncio.run(fetch_player_profile_async(account_id))
-

@@ -1,9 +1,8 @@
-import asyncio
 import json
+import aiohttp
 import requests
 from collections import Counter
-from pro_players.main_function import fetch_player_profile, \
-    fetch_last_pro_matches_for_player, get_pro_player_team
+from pro_players.main_function import fetch_player_profile, fetch_last_pro_matches_for_player
 from players.main_functions import (
     calculate_skill_score,
     get_roles_from_matches,
@@ -18,11 +17,9 @@ from players.classification import (
 )
 from heroes.main_functions import is_win
 
-
-# Загрузка словаря героев один раз при импорте
+# Загрузка словаря героев
 with open('data/heroes.json', encoding='utf-8') as f:
     heroes_dict = json.load(f)
-
 
 def is_pro_player(account_id):
     response = requests.get("https://api.opendota.com/api/proPlayers")
@@ -31,10 +28,8 @@ def is_pro_player(account_id):
         return any(p["account_id"] == account_id for p in players)
     return False
 
-
 def get_hero_name(hero_id):
     return heroes_dict.get(str(hero_id), f"Unknown Hero ({hero_id})")
-
 
 def calculate_hero_winrate(matches):
     hero_counts = Counter()
@@ -44,19 +39,15 @@ def calculate_hero_winrate(matches):
         hero_id = match.get('hero_id')
         if hero_id is None:
             continue
-
         hero_counts[hero_id] += 1
-
         if is_win(match):
             hero_wins[hero_id] += 1
 
     return hero_counts, hero_wins
 
-
 def get_top_heroes_with_winrate(matches, top_n=5):
     hero_counts, hero_wins = calculate_hero_winrate(matches)
     top_heroes = hero_counts.most_common(top_n)
-
     result = []
     for hero_id, count in top_heroes:
         wins = hero_wins.get(hero_id, 0)
@@ -69,16 +60,25 @@ def get_top_heroes_with_winrate(matches, top_n=5):
         })
     return result
 
+async def get_pro_player_team(account_id):
+    async with aiohttp.ClientSession() as session:
+        async with session.get("https://api.opendota.com/api/proPlayers") as response:
+            if response.status == 200:
+                players = await response.json()
+                for p in players:
+                    if p["account_id"] == account_id:
+                        return p.get("team_name", "Неизвестно\Нет")
+            return "Неизвестно"
 
-def analyze_pro_player(account_id: int, match_limit: int = 100):
+async def analyze_pro_player(account_id: int, match_limit: int = 100):
     print(f"[INFO] Анализируем pro игрока с ID: {account_id}")
-    profile = fetch_player_profile(account_id)
+    profile = await fetch_player_profile(account_id)  # Используем await
 
     if not profile:
         print(f"[ERROR] Не удалось загрузить профиль игрока {account_id}")
         return None, "Ошибка загрузки профиля игрока"
 
-    matches = asyncio.run(fetch_last_pro_matches_for_player(account_id, match_limit))
+    matches = await fetch_last_pro_matches_for_player(account_id, match_limit)
 
     if not matches:
         print(f"[ERROR] Не загружено ни одного pro-матча для игрока {account_id}")
@@ -89,7 +89,6 @@ def analyze_pro_player(account_id: int, match_limit: int = 100):
 
     print(f"[INFO] Найдено {len(matches)} pro-матчей для анализа")
 
-    # Всё как раньше — ранги, mmr и прочее...
     rank_mapping = load_rank_mapping()
     rank_tier = profile.get("rank_tier", 0)
     rank_info = rank_mapping.get(str(rank_tier), {"name": "неизвестно", "mmr": 0})
@@ -136,7 +135,8 @@ def analyze_pro_player(account_id: int, match_limit: int = 100):
     )
 
     top_heroes = get_top_heroes_with_winrate(matches)
-    team_name = get_pro_player_team(account_id)
+    team_name = await get_pro_player_team(account_id)
+
     nickname = profile.get("profile", {}).get("personaname", "Unknown Player")
 
     result = {
@@ -156,4 +156,3 @@ def analyze_pro_player(account_id: int, match_limit: int = 100):
     }
 
     return result, None
-
