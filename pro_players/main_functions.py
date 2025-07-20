@@ -71,23 +71,17 @@ async def get_pro_player_team(account_id):
             return "Неизвестно"
 
 async def analyze_pro_player(account_id: int, match_limit: int = 100):
-    print(f"[INFO] Анализируем pro игрока с ID: {account_id}")
-    profile = await fetch_player_profile(account_id)  # Используем await
+    profile = await fetch_player_profile(account_id)
 
     if not profile:
-        print(f"[ERROR] Не удалось загрузить профиль игрока {account_id}")
         return None, "Ошибка загрузки профиля игрока"
 
     matches = await fetch_last_pro_matches_for_player(account_id, match_limit)
 
     if not matches:
-        print(f"[ERROR] Не загружено ни одного pro-матча для игрока {account_id}")
         return None, "Недостаточно матчей для анализа"
     elif len(matches) < 10:
-        print(f"[WARN] Найдено только {len(matches)} pro-матчей для анализа (нужно ≥10)")
         return None, "Недостаточно матчей для анализа"
-
-    print(f"[INFO] Найдено {len(matches)} pro-матчей для анализа")
 
     rank_mapping = load_rank_mapping()
     rank_tier = profile.get("rank_tier", 0)
@@ -103,7 +97,7 @@ async def analyze_pro_player(account_id: int, match_limit: int = 100):
         mmr_text = "ниже 3000"
         mmr_for_calc = 0
     elif estimated_mmr > 0:
-        mmr_text = f"~{estimated_mmr} (по рангу: {rank_name})"
+        mmr_text = f"~{rank_info['mmr']} (по рангу: {rank_name})"
         mmr_for_calc = estimated_mmr
     else:
         mmr_text = "не определён"
